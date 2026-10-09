@@ -51,22 +51,37 @@ function renderTasks() {
     taskList.appendChild(createTaskElement(task));
   });
 }
+function setStatus(message, isError = false) {
+  statusMessage.textContent = message;
+  if (isError) {
+    statusMessage.classList.add("error");
+  } else {
+    statusMessage.classList.remove("error");
+  }
+}
 
 async function loadTasks() {
-  statusMessage.textContent = "Loading tasks...";
+  setStatus("Loading tasks...");
+  loadTasksBtn.disabled = true;
 
-  const rawTasks = await fetchTasks();
+  try {
+    const rawTasks = await fetchTasks();
 
-  const jsonString = JSON.stringify(rawTasks);
-  const parsedTasks = JSON.parse(jsonString);
+    const jsonString = JSON.stringify(rawTasks);
+    const parsedTasks = JSON.parse(jsonString);
 
-  const tasks = parsedTasks.map(
-    (item) => new Task(item.id, item.title, item.completed)
-  );
+    const tasks = parsedTasks.map(
+      (item) => new Task(item.id, item.title, item.completed)
+    );
 
-  taskManager.setTasks(tasks);
-  renderTasks();
-  statusMessage.textContent = "";
+    taskManager.setTasks(tasks);
+    renderTasks();
+    setStatus("");
+  } catch (error) {
+    setStatus("Error: " + error.message, true);
+  } finally {
+    loadTasksBtn.disabled = false;
+  }
 }
 
 loadTasksBtn.addEventListener("click", loadTasks);
